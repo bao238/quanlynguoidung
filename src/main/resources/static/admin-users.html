@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Quản lý người dùng</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#0d6efd" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)" />
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css"
+      integrity="sha256-tXJfXfp6Ewt1ilPzLDtQnJV4hclT9XuaZUKyUvmyr+Q="
+      crossorigin="anonymous"
+      media="print"
+      onload="this.media='all'"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/styles/overlayscrollbars.min.css"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="/adminlte/css/adminlte.css" />
+    <style>
+      .table-fixed { table-layout: fixed; }
+      .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .users-table th { white-space: nowrap; }
+      .users-table td { vertical-align: middle; }
+      .users-table .col-actions { white-space: nowrap; }
+      .stat-pill { border: 1px solid var(--bs-border-color); border-radius: 999px; padding: 0.35rem 0.75rem; }
+      .role-chip { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0.15rem 0.35rem 0.15rem 0; padding: 0.25rem 0.55rem; border: 1px solid var(--bs-border-color); border-radius: 999px; background: var(--bs-body-bg); }
+      .role-chip button { border: 0; background: transparent; color: var(--bs-danger); padding: 0; line-height: 1; }
+      .role-chip--student { border-color: rgba(25, 135, 84, .35); }
+      .role-chip--lecturer { border-color: rgba(13, 110, 253, .35); }
+      .role-chip--admin { border-color: rgba(220, 53, 69, .35); }
+      .role-filter-select {
+        min-width: 260px;
+        max-width: 360px;
+      }
+    </style>
+  </head>
+  <body class="layout-fixed sidebar-expand-lg sidebar-open bg-body-tertiary">
+    <div class="app-wrapper">
+      <nav class="app-header navbar navbar-expand bg-body">
+        <div class="container-fluid">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button">
+                <i class="bi bi-list"></i>
+              </a>
+            </li>
+            <li class="nav-item d-none d-md-block">
+              <a href="/admin/users" class="nav-link">Quản lý người dùng</a>
+            </li>
+          </ul>
+          <ul class="navbar-nav ms-auto align-items-center">
+            <li class="nav-item d-none d-md-block">
+              <span id="authGreeting" class="nav-link py-1 text-body-secondary small mb-0"></span>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" title="Đăng xuất / đổi tài khoản" id="authLink">
+                <i class="bi bi-person-circle"></i>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/" title="Home">
+                <i class="bi bi-house"></i>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+        <div class="sidebar-brand">
+          <a href="/admin/users" class="brand-link">
+            <img
+              src="/adminlte/assets/img/AdminLTELogo.png"
+              alt="AdminLTE Logo"
+              class="brand-image opacity-75 shadow"
+            />
+            <span class="brand-text fw-light">AdminLTE 4</span>
+          </a>
+        </div>
+        <div class="sidebar-wrapper">
+          <nav class="mt-2">
+            <ul
+              class="nav sidebar-menu flex-column"
+              data-lte-toggle="treeview"
+              role="navigation"
+              aria-label="Main navigation"
+              data-accordion="false"
+            >
+              <li class="nav-item">
+                <a href="/admin/users" class="nav-link active">
+                  <i class="nav-icon bi bi-people"></i>
+                  <p>Quản lý người dùng</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="/admin/role-permissions" class="nav-link">
+                  <i class="nav-icon bi bi-shield-lock"></i>
+                  <p>Phân quyền người dùng</p>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </aside>
+
+      <main class="app-main">
+        <div class="app-content-header">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-sm-6">
+                <h1 class="mb-0">Quản lý người dùng</h1>
+              </div>
+              <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                  <li class="breadcrumb-item"><a href="/admin/users">Home</a></li>
+                  <li class="breadcrumb-item active">Quản lý người dùng</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="app-content">
+          <div class="container-fluid">
+            <div id="alert" class="alert alert-danger d-none" role="alert"></div>
+
+            <div class="card mb-4">
+              <div class="card-header">
+                <div class="row g-2 align-items-center">
+                  <div class="col-md-6">
+                    <h3 class="card-title mb-0">Danh sách người dùng</h3>
+                  </div>
+                  <div class="col-md-6 text-md-end">
+                    <a class="btn btn-outline-dark me-2" href="/auth">
+                      <i class="bi bi-box-arrow-in-right me-1"></i>
+                      Auth
+                    </a>
+                    <button class="btn btn-primary" type="button" onclick="openUserCreate()">
+                      <i class="bi bi-plus-lg me-1"></i>
+                      Thêm người dùng
+                    </button>
+                    <button class="btn btn-outline-secondary ms-2" type="button" onclick="loadUsers()">
+                      <i class="bi bi-arrow-clockwise me-1"></i>
+                      Làm mới
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body border-bottom">
+                <div class="row g-2">
+                  <div class="col-lg-4">
+                    <input
+                      id="searchKeyword"
+                      class="form-control"
+                      placeholder="Từ khóa tổng hợp (username/email...)"
+                      onkeydown="if(event.key === 'Enter'){event.preventDefault(); applySearch();}"
+                    />
+                  </div>
+                  <div class="col-lg-3">
+                    <input
+                      id="searchById"
+                      class="form-control"
+                      placeholder="Lọc theo ID"
+                      onkeydown="if(event.key === 'Enter'){event.preventDefault(); applySearch();}"
+                    />
+                  </div>
+                  <div class="col-lg-3">
+                    <input
+                      id="searchByName"
+                      class="form-control"
+                      placeholder="Lọc theo tên/username"
+                      onkeydown="if(event.key === 'Enter'){event.preventDefault(); applySearch();}"
+                    />
+                  </div>
+                  <div class="col-lg-2 text-lg-end">
+                    <button class="btn btn-outline-primary" type="button" onclick="applySearch()">
+                      <i class="bi bi-search me-1"></i>
+                      Tìm kiếm
+                    </button>
+                    <button class="btn btn-outline-secondary ms-2" type="button" onclick="clearSearchAndReload()">
+                      Xóa lọc
+                    </button>
+                  </div>
+                </div>
+                <div class="d-flex mt-3 align-items-center gap-2 flex-wrap">
+                  <span class="text-body-secondary small me-1">Phân loại role:</span>
+                  <select id="roleFilterSelect" class="form-select form-select-sm role-filter-select" aria-label="Role filter">
+                    <option value="ALL">Tất cả role</option>
+                  </select>
+                  <span id="userCount" class="stat-pill text-body-secondary ms-auto">Tổng users: 0</span>
+                </div>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0 table-fixed users-table">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 240px;">ID</th>
+                        <th style="width: 160px;">Username</th>
+                        <th style="width: 180px;">Họ tên</th>
+                        <th style="width: 200px;">Email</th>
+                        <th style="width: 140px;">SĐT</th>
+                        <th style="width: 110px;">Kích hoạt</th>
+                        <th style="width: 260px;">Roles</th>
+                        <th style="width: 170px;" class="text-end">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="userTable"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="app-footer">
+        <div class="float-end d-none d-sm-inline">Quản lý người dùng</div>
+        <strong>AdminLTE</strong>
+      </footer>
+    </div>
+
+    <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="userModalTitle">Thêm người dùng</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="userForm" onsubmit="saveUser(event)">
+              <input type="hidden" id="userId" />
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="username" class="form-label">Username</label>
+                  <input id="username" class="form-control" required />
+                </div>
+                <div class="col-md-6">
+                  <label for="password" class="form-label">Mật khẩu</label>
+                  <input id="password" type="password" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                  <label for="fullName" class="form-label">Họ tên</label>
+                  <input id="fullName" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                  <label for="email" class="form-label">Email</label>
+                  <input id="email" type="email" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                  <label for="phone" class="form-label">Số điện thoại</label>
+                  <input id="phone" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                  <label for="isActive" class="form-label">Kích hoạt</label>
+                  <select id="isActive" class="form-select">
+                    <option value="true">Đang hoạt động</option>
+                    <option value="false">Ngưng hoạt động</option>
+                  </select>
+                </div>
+              </div>
+              <div class="text-end">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                  Hủy
+                </button>
+                <button type="submit" class="btn btn-primary ms-2">Lưu</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="roleModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Gán role cho người dùng</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="roleUserId" />
+            <div class="mb-3">
+              <label for="roleAssignSelect" class="form-label">Chọn role</label>
+              <select id="roleAssignSelect" class="form-select"></select>
+            </div>
+            <div class="text-end">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                Hủy
+              </button>
+              <button type="button" class="btn btn-primary ms-2" onclick="assignRole()">
+                Gán role
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="/adminlte/js/adminlte.js"></script>
+    <script>
+      const API_USERS = '/api/users';
+      const API_ROLES = '/api/roles';
+
+      let usersCache = [];
+      let rolesCache = [];
+      let searchKeyword = '';
+      let searchId = '';
+      let searchName = '';
+      let selectedRoleFilter = 'ALL'; // ALL | ROLE_CODE
+      let currentAuthorities = [];
+      let canCreateUser = false;
+      let canUpdateUser = false;
+      let canDeleteUser = false;
+      let canAssignRole = false;
+
+      const userModal = new bootstrap.Modal(document.getElementById('userModal'));
+      const roleModal = new bootstrap.Modal(document.getElementById('roleModal'));
+
+      const alertEl = document.getElementById('alert');
+      function showError(message) {
+        alertEl.textContent = message;
+        alertEl.classList.remove('d-none');
+      }
+      function clearError() {
+        alertEl.classList.add('d-none');
+        alertEl.textContent = '';
+      }
+
+      function roleName(role) {
+        return role.name || role.code || role.id;
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (char) => {
+          const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+          return map[char] || char;
+        });
+      }
+
+      async function readErrorMessage(res, fallback) {
+        const data = await res.json().catch(() => null);
+        return data?.message || fallback;
+      }
+
+      function hasAnyAuthority(...names) {
+        return names.some((name) => currentAuthorities.includes(name));
+      }
+
+      function applyPermissionUi() {
+        canCreateUser = hasAnyAuthority('ROLE_ADMIN', 'USER_CREATE');
+        canUpdateUser = hasAnyAuthority('ROLE_ADMIN', 'USER_UPDATE');
+        canDeleteUser = hasAnyAuthority('ROLE_ADMIN', 'USER_DELETE');
+        canAssignRole = hasAnyAuthority('ROLE_ADMIN', 'USER_CREATE');
+
+        const createBtn = document.querySelector('button[onclick="openUserCreate()"]');
+        if (createBtn) createBtn.classList.toggle('d-none', !canCreateUser);
+      }
+
+      function renderUsers(list) {
+        const tbody = document.getElementById('userTable');
+        const userCountEl = document.getElementById('userCount');
+        const filtered = filterUsersByCategory(list);
+        if (userCountEl) {
+          userCountEl.textContent = `Tổng users: ${filtered.length}`;
+        }
+        if (!filtered.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="8" class="text-center text-muted py-4">Chưa có dữ liệu</td></tr>';
+          return;
+        }
+        tbody.innerHTML = filtered
+          .map((u) => {
+            const rolesText = (u.roles || []).map(roleName).join(', ');
+
+            const roleBadges = (u.roles || []).length
+              ? (u.roles || [])
+                  .map((role) => {
+                    const cat = getRoleCategory(role); // STUDENT | LECTURER | ADMIN
+                    const catClass =
+                      cat === 'STUDENT' ? 'role-chip--student' :
+                      cat === 'ADMIN' ? 'role-chip--admin' :
+                      'role-chip--lecturer';
+                    return `
+                      <span class="role-chip ${catClass}" title="${escapeHtml(roleName(role))}">
+                        <span>${escapeHtml(roleName(role))}</span>
+                        ${canDeleteUser ? `
+                          <button type="button" title="Gỡ role" onclick="removeRole('${u.id}', '${role.id}', '${escapeHtml(roleName(role))}')">
+                            <i class="bi bi-x-circle"></i>
+                          </button>
+                        ` : ''}
+                      </span>
+                    `;
+                  })
+                  .join('')
+              : '<span class="text-muted">Chưa có role</span>';
+            return `
+              <tr>
+                <td class="truncate" title="${u.id}">${u.id}</td>
+                  <td class="truncate" title="${u.username ?? ''}">${u.username ?? ''}</td>
+                  <td class="truncate" title="${u.fullName ?? ''}">${u.fullName ?? ''}</td>
+                  <td class="truncate" title="${u.email ?? ''}">${u.email ?? ''}</td>
+                  <td class="truncate" title="${u.phone ?? ''}">${u.phone ?? ''}</td>
+                  <td>${u.isActive ? 'Yes' : 'No'}</td>
+                  <td title="${escapeHtml(rolesText)}">${roleBadges}</td>
+                  <td class="text-end col-actions">
+                  ${canUpdateUser ? `
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="openUserEdit('${u.id}')">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                  ` : ''}
+                  ${canAssignRole ? `
+                    <button class="btn btn-sm btn-outline-secondary me-1" onclick="openAssignRole('${u.id}')">
+                      <i class="bi bi-shield"></i>
+                    </button>
+                  ` : ''}
+                  ${canDeleteUser ? `
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${u.id}')">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  ` : ''}
+                  ${(!canUpdateUser && !canAssignRole && !canDeleteUser) ? '<span class="text-muted small">Chỉ xem</span>' : ''}
+                </td>
+              </tr>
+            `;
+          })
+          .join('');
+      }
+
+      async function loadUsers() {
+        clearError();
+        try {
+          const query = new URLSearchParams();
+          if (searchKeyword) query.set('q', searchKeyword);
+          if (searchId) query.set('id', searchId);
+          if (searchName) query.set('name', searchName);
+          const url = query.toString() ? `${API_USERS}?${query.toString()}` : API_USERS;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(await readErrorMessage(res, `Load users failed (${res.status})`));
+          usersCache = await res.json();
+          renderUsers(usersCache);
+        } catch (err) {
+          showError(err.message || 'Failed to load users');
+        }
+      }
+
+      function getRoleCategory(role) {
+        // Prefer role.code from backend.
+        const code = (role?.code || '').toUpperCase().trim();
+        if (code === 'STUDENT') return 'STUDENT';
+        if (code === 'ADMIN') return 'ADMIN';
+
+        // Fallback by name (if code missing).
+        const name = (role?.name || '').toLowerCase();
+        if (name.includes('sinh')) return 'STUDENT';
+        if (name.includes('quản') || name.includes('admin')) return 'ADMIN';
+
+        return 'LECTURER';
+      }
+
+      function getRoleCode(role) {
+        return String(role?.code || '').trim().toUpperCase();
+      }
+
+      function filterUsersByCategory(users) {
+        if (selectedRoleFilter === 'ALL') return users;
+        const desired = selectedRoleFilter;
+        return (users || []).filter((u) => {
+          const roles = u.roles || [];
+          return roles.some((r) => getRoleCode(r) === desired);
+        });
+      }
+
+      function setRoleCategoryFilter(filter) {
+        selectedRoleFilter = filter;
+        const roleFilterSelect = document.getElementById('roleFilterSelect');
+        if (roleFilterSelect && roleFilterSelect.value !== filter) {
+          roleFilterSelect.value = filter;
+        }
+        renderUsers(usersCache);
+      }
+
+      function applySearch() {
+        searchKeyword = document.getElementById('searchKeyword').value.trim();
+        searchId = document.getElementById('searchById').value.trim();
+        searchName = document.getElementById('searchByName').value.trim();
+        loadUsers();
+      }
+
+      function clearSearchAndReload() {
+        document.getElementById('searchKeyword').value = '';
+        document.getElementById('searchById').value = '';
+        document.getElementById('searchByName').value = '';
+        searchKeyword = '';
+        searchId = '';
+        searchName = '';
+        loadUsers();
+      }
+
+      async function loadRoles() {
+        const res = await fetch(API_ROLES);
+        if (!res.ok) throw new Error(await readErrorMessage(res, `Load roles failed (${res.status})`));
+        rolesCache = await res.json();
+        renderRoleFilters();
+        const roleAssignSelect = document.getElementById('roleAssignSelect');
+        roleAssignSelect.innerHTML = '';
+        rolesCache.forEach((r) => {
+          const opt = document.createElement('option');
+          opt.value = r.id;
+          opt.textContent = roleName(r);
+          roleAssignSelect.appendChild(opt);
+        });
+      }
+
+      function renderRoleFilters() {
+        const roleFilterSelect = document.getElementById('roleFilterSelect');
+        if (!roleFilterSelect) return;
+        const sortedRoles = [...rolesCache].sort((a, b) => roleName(a).localeCompare(roleName(b), 'vi'));
+        roleFilterSelect.innerHTML = '';
+        const allOption = document.createElement('option');
+        allOption.value = 'ALL';
+        allOption.textContent = 'Tất cả role';
+        roleFilterSelect.appendChild(allOption);
+        sortedRoles.forEach((r) => {
+          const option = document.createElement('option');
+          option.value = getRoleCode(r);
+          option.textContent = roleName(r);
+          roleFilterSelect.appendChild(option);
+        });
+        if (selectedRoleFilter !== 'ALL' && !sortedRoles.some((r) => getRoleCode(r) === selectedRoleFilter)) {
+          selectedRoleFilter = 'ALL';
+        }
+        roleFilterSelect.value = selectedRoleFilter;
+      }
+
+      function openUserCreate() {
+        if (!canCreateUser) return;
+        document.getElementById('userModalTitle').textContent = 'Thêm người dùng';
+        document.getElementById('userId').value = '';
+        document.getElementById('username').value = '';
+        document.getElementById('fullName').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('phone').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('isActive').value = 'true';
+        userModal.show();
+      }
+
+      function openUserEdit(id) {
+        if (!canUpdateUser) return;
+        const u = usersCache.find((x) => x.id === id);
+        if (!u) return;
+        document.getElementById('userModalTitle').textContent = 'Cập nhật người dùng';
+        document.getElementById('userId').value = id;
+        document.getElementById('username').value = u.username ?? '';
+        document.getElementById('fullName').value = u.fullName ?? '';
+        document.getElementById('email').value = u.email ?? '';
+        document.getElementById('phone').value = u.phone ?? '';
+        document.getElementById('password').value = '';
+        document.getElementById('isActive').value = String(u.isActive ?? true);
+        userModal.show();
+      }
+
+      async function saveUser(event) {
+        event.preventDefault();
+        clearError();
+        const id = document.getElementById('userId').value;
+        const username = document.getElementById('username').value.trim();
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const password = document.getElementById('password').value;
+        const isActive = document.getElementById('isActive').value === 'true';
+
+        try {
+          if (!id) {
+            if (!canCreateUser) throw new Error('Bạn không có quyền thêm người dùng');
+            const res = await fetch(`${API_USERS}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username, password, fullName, email, phone, isActive }),
+            });
+            if (!res.ok) throw new Error(await readErrorMessage(res, `Create user failed (${res.status})`));
+            await res.json();
+          } else {
+            if (!canUpdateUser) throw new Error('Bạn không có quyền cập nhật người dùng');
+            const body = { username, fullName, email, phone, isActive };
+            if (password && password.trim()) {
+              body.password = password;
+            }
+            const res = await fetch(`${API_USERS}/${id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+            });
+            if (!res.ok) throw new Error(await readErrorMessage(res, `Update user failed (${res.status})`));
+          }
+          userModal.hide();
+          await loadUsers();
+        } catch (err) {
+          showError(err.message || 'Failed to save user');
+        }
+      }
+
+      async function deleteUser(id) {
+        if (!canDeleteUser) return;
+        if (!confirm('Bạn có chắc chắn xoá không?')) return;
+        clearError();
+        try {
+          const res = await fetch(`${API_USERS}/${id}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error(await readErrorMessage(res, `Delete failed (${res.status})`));
+          await loadUsers();
+        } catch (err) {
+          showError(err.message || 'Failed to delete user');
+        }
+      }
+
+      function openAssignRole(userId) {
+        if (!canAssignRole) return;
+        document.getElementById('roleUserId').value = userId;
+        roleModal.show();
+      }
+
+      async function assignRole() {
+        if (!canAssignRole) return;
+        clearError();
+        const userId = document.getElementById('roleUserId').value;
+        const roleId = document.getElementById('roleAssignSelect').value;
+        if (!userId || !roleId) return;
+        try {
+          const res = await fetch(`${API_USERS}/${userId}/roles/${roleId}`, { method: 'POST' });
+          if (!res.ok) throw new Error(await readErrorMessage(res, `Assign role failed (${res.status})`));
+          roleModal.hide();
+          await loadUsers();
+        } catch (err) {
+          showError(err.message || 'Failed to assign role');
+        }
+      }
+
+      async function removeRole(userId, roleId, roleLabel) {
+        if (!canDeleteUser) return;
+        if (!confirm('Bạn có chắc chắn xoá không?')) return;
+        clearError();
+        try {
+          const res = await fetch(`${API_USERS}/${userId}/roles/${roleId}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error(await readErrorMessage(res, `Remove role failed (${res.status})`));
+          await loadUsers();
+        } catch (err) {
+          showError(err.message || 'Không thể gỡ role');
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        (async function initAuthGreeting() {
+          try {
+            const res = await fetch('/api/auth/me');
+            if (!res.ok) {
+              window.location.assign('/auth');
+              return;
+            }
+            const u = await res.json();
+            currentAuthorities = Array.isArray(u.authorities) ? u.authorities : [];
+            applyPermissionUi();
+            try {
+              sessionStorage.setItem(
+                'authUser',
+                JSON.stringify({
+                  userId: u.userId,
+                  username: u.username,
+                  fullName: u.fullName || '',
+                  lastLoginAt: u.lastLoginAt || null,
+                  authorities: currentAuthorities,
+                })
+              );
+            } catch (_) {
+              /* ignore */
+            }
+            const greet = document.getElementById('authGreeting');
+            if (greet) {
+              greet.textContent =
+                'Xin chào, ' + (u.fullName || u.username || 'bạn');
+            }
+          } catch (_) {
+            window.location.assign('/auth');
+          }
+        })();
+
+        const authLink = document.getElementById('authLink');
+        if (authLink) {
+          authLink.addEventListener('click', async function (event) {
+            event.preventDefault();
+            try {
+              await fetch('/api/auth/logout', { method: 'POST' });
+            } catch (_) {
+              /* ignore */
+            }
+            try {
+              sessionStorage.removeItem('authUser');
+            } catch (_) {
+              /* ignore */
+            }
+            window.location.assign('/auth');
+          });
+        }
+        const sidebarWrapper = document.querySelector('.sidebar-wrapper');
+        if (sidebarWrapper && OverlayScrollbarsGlobal?.OverlayScrollbars !== undefined) {
+          OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
+            scrollbars: {
+              theme: 'os-theme-light',
+              autoHide: 'leave',
+              clickScroll: true,
+            },
+          });
+        }
+        const roleFilterSelect = document.getElementById('roleFilterSelect');
+        if (roleFilterSelect) {
+          roleFilterSelect.addEventListener('change', (event) => {
+            setRoleCategoryFilter(event.target.value || 'ALL');
+          });
+        }
+        Promise.all([loadUsers(), loadRoles()]).catch(() => {});
+
+        // Default category UI
+        setRoleCategoryFilter('ALL');
+      });
+    </script>
+  </body>
+</html>

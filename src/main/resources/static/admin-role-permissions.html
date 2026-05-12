@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Phân quyền người dùng</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#0d6efd" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)" />
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css"
+      integrity="sha256-tXJfXfp6Ewt1ilPzLDtQnJV4hclT9XuaZUKyUvmyr+Q="
+      crossorigin="anonymous"
+      media="print"
+      onload="this.media='all'"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/styles/overlayscrollbars.min.css"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="/adminlte/css/adminlte.css" />
+    <style>
+      .table-fixed { table-layout: fixed; }
+      .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .readonly-banner { border: 1px dashed var(--bs-warning-border-subtle); background: var(--bs-warning-bg-subtle); }
+    </style>
+  </head>
+  <body class="layout-fixed sidebar-expand-lg sidebar-open bg-body-tertiary">
+    <div class="app-wrapper">
+      <nav class="app-header navbar navbar-expand bg-body">
+        <div class="container-fluid">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button">
+                <i class="bi bi-list"></i>
+              </a>
+            </li>
+            <li class="nav-item d-none d-md-block">
+              <a href="/admin/role-permissions" class="nav-link">Phân quyền người dùng</a>
+            </li>
+          </ul>
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/" title="Home">
+                <i class="bi bi-house"></i>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+        <div class="sidebar-brand">
+          <a href="/admin/users" class="brand-link">
+            <img
+              src="/adminlte/assets/img/AdminLTELogo.png"
+              alt="AdminLTE Logo"
+              class="brand-image opacity-75 shadow"
+            />
+            <span class="brand-text fw-light">AdminLTE 4</span>
+          </a>
+        </div>
+        <div class="sidebar-wrapper">
+          <nav class="mt-2">
+            <ul
+              class="nav sidebar-menu flex-column"
+              data-lte-toggle="treeview"
+              role="navigation"
+              aria-label="Main navigation"
+              data-accordion="false"
+            >
+              <li class="nav-item">
+                <a href="/admin/users" class="nav-link">
+                  <i class="nav-icon bi bi-people"></i>
+                  <p>Quản lý người dùng</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="/admin/role-permissions" class="nav-link active">
+                  <i class="nav-icon bi bi-shield-lock"></i>
+                  <p>Phân quyền người dùng</p>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </aside>
+
+      <main class="app-main">
+        <div class="app-content-header">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-sm-6">
+                <h1 class="mb-0">Phân quyền người dùng</h1>
+              </div>
+              <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                  <li class="breadcrumb-item"><a href="/admin/role-permissions">Home</a></li>
+                  <li class="breadcrumb-item active">Phân quyền người dùng</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="app-content">
+          <div class="container-fluid">
+            <div id="alert" class="alert alert-danger d-none" role="alert"></div>
+            <div id="readonlyNotice" class="alert readonly-banner d-none" role="alert"></div>
+
+            <div class="card">
+              <div class="card-header">
+                <div class="row g-2 align-items-center">
+                  <div class="col-md-6">
+                    <h3 class="card-title mb-0">Role và Permission</h3>
+                  </div>
+                  <div class="col-md-6 text-md-end">
+                    <button class="btn btn-outline-secondary" type="button" onclick="refreshRolePermissions()">
+                      <i class="bi bi-arrow-clockwise me-1"></i>
+                      Làm mới
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row g-3 align-items-end mb-3">
+                  <div class="col-md-4">
+                    <label class="form-label">Chọn role</label>
+                    <select id="roleSelect" class="form-select"></select>
+                  </div>
+                  <div class="col-md-5">
+                    <label class="form-label">Gán permission</label>
+                    <select id="permissionSelect" class="form-select"></select>
+                  </div>
+                  <div class="col-md-3">
+                    <button class="btn btn-primary w-100" type="button" onclick="assignPermission()">
+                      <i class="bi bi-link-45deg me-1"></i>
+                      Gán quyền
+                    </button>
+                  </div>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0 table-fixed">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 240px;">Permission ID</th>
+                        <th style="width: 200px;">Code</th>
+                        <th style="width: 200px;">Name</th>
+                        <th>Description</th>
+                        <th style="width: 120px;" class="text-end">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="permissionTable"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </main>
+
+      <footer class="app-footer">
+        <div class="float-end d-none d-sm-inline">Phân quyền người dùng</div>
+        <strong>AdminLTE</strong>
+      </footer>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="/adminlte/js/adminlte.js"></script>
+    <script>
+      const API_ROLES = '/api/roles';
+      const API_PERMS = '/api/permissions';
+      const API_ROLE_PERMS = '/api/role-permissions';
+
+      let rolesCache = [];
+      let permissionsCache = [];
+      let readOnlyMode = false;
+
+      const alertEl = document.getElementById('alert');
+      const readonlyNoticeEl = document.getElementById('readonlyNotice');
+      function showError(message) {
+        alertEl.textContent = message;
+        alertEl.classList.remove('d-none');
+      }
+      function clearError() {
+        alertEl.classList.add('d-none');
+        alertEl.textContent = '';
+      }
+
+      function setReadOnlyMode(enabled, message = 'Bạn đang ở chế độ chỉ xem: chỉ được xem, không được gán hoặc xóa quyền.') {
+        readOnlyMode = enabled;
+        if (readonlyNoticeEl) {
+          readonlyNoticeEl.textContent = message;
+          readonlyNoticeEl.classList.toggle('d-none', !enabled);
+        }
+        const assignBtn = document.querySelector('button[onclick="assignPermission()"]');
+        const roleSelect = document.getElementById('roleSelect');
+        const permissionSelect = document.getElementById('permissionSelect');
+        if (assignBtn) assignBtn.disabled = enabled;
+        if (permissionSelect) permissionSelect.disabled = enabled;
+        if (roleSelect) roleSelect.disabled = false; // vẫn cho đổi role để xem
+      }
+
+      function roleName(role) {
+        return role.name || role.code || role.id;
+      }
+
+      async function loadRoles() {
+        const res = await fetch(API_ROLES);
+        if (!res.ok) throw new Error(`Load roles failed (${res.status})`);
+        rolesCache = await res.json();
+        const roleSelect = document.getElementById('roleSelect');
+        roleSelect.innerHTML = '';
+        rolesCache.forEach((r) => {
+          const opt = document.createElement('option');
+          opt.value = r.id;
+          opt.textContent = roleName(r);
+          roleSelect.appendChild(opt);
+        });
+      }
+
+      async function loadPermissions() {
+        const res = await fetch(API_PERMS);
+        if (!res.ok) throw new Error(`Load permissions failed (${res.status})`);
+        permissionsCache = await res.json();
+        const permSelect = document.getElementById('permissionSelect');
+        permSelect.innerHTML = '';
+        permissionsCache.forEach((p) => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = p.name || p.code || p.description || p.id;
+          permSelect.appendChild(opt);
+        });
+      }
+
+      function renderRolePermissions(list) {
+        const tbody = document.getElementById('permissionTable');
+        if (!list.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" class="text-center text-muted py-4">Chưa có quyền</td></tr>';
+          return;
+        }
+        tbody.innerHTML = list
+          .map((p) => {
+            return `
+              <tr>
+                <td class="truncate" title="${p.id}">${p.id}</td>
+                <td>${p.code ?? ''}</td>
+                <td>${p.name ?? ''}</td>
+                <td>${p.description ?? ''}</td>
+                <td class="text-end">
+                  <button class="btn btn-sm btn-outline-danger" onclick="removePermission('${p.id}')" ${readOnlyMode ? 'disabled' : ''}>
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </td>
+              </tr>
+            `;
+          })
+          .join('');
+      }
+
+      async function loadRolePermissions() {
+        const roleId = document.getElementById('roleSelect').value;
+        if (!roleId) {
+          renderRolePermissions([]);
+          return;
+        }
+        const res = await fetch(`${API_ROLE_PERMS}/${roleId}`);
+        if (!res.ok) throw new Error(`Load role permissions failed (${res.status})`);
+        const rolePerms = await res.json();
+        const permIds = new Set(rolePerms.map((rp) => rp.permissionId));
+        const assigned = permissionsCache.filter((p) => permIds.has(p.id));
+        renderRolePermissions(assigned);
+      }
+
+      async function refreshRolePermissions() {
+        clearError();
+        try {
+          await loadRoles();
+          await loadPermissions();
+          await loadRolePermissions();
+        } catch (err) {
+          showError(err.message || 'Failed to load role permissions');
+        }
+      }
+
+      async function assignPermission() {
+        clearError();
+        const roleId = document.getElementById('roleSelect').value;
+        const permissionId = document.getElementById('permissionSelect').value;
+        if (!roleId || !permissionId) return;
+        try {
+          const params = new URLSearchParams({ roleId, permissionId });
+          const res = await fetch(`${API_ROLE_PERMS}?${params.toString()}`, { method: 'POST' });
+          if (!res.ok) {
+            if (res.status === 403) {
+              setReadOnlyMode(true);
+              throw new Error('Bạn không có quyền gán permission (chỉ xem).');
+            }
+            throw new Error(`Assign permission failed (${res.status})`);
+          }
+          await loadRolePermissions();
+        } catch (err) {
+          showError(err.message || 'Failed to assign permission');
+        }
+      }
+
+      async function removePermission(permissionId) {
+        clearError();
+        const roleId = document.getElementById('roleSelect').value;
+        if (!roleId || !permissionId) return;
+        if (!confirm('Bạn có chắc chắn xoá không?')) return;
+        try {
+          const params = new URLSearchParams({ roleId, permissionId });
+          const res = await fetch(`${API_ROLE_PERMS}?${params.toString()}`, { method: 'DELETE' });
+          if (!res.ok) {
+            if (res.status === 403) {
+              setReadOnlyMode(true);
+              throw new Error('Bạn không có quyền xóa permission (chỉ xem).');
+            }
+            throw new Error(`Remove permission failed (${res.status})`);
+          }
+          await loadRolePermissions();
+        } catch (err) {
+          showError(err.message || 'Failed to remove permission');
+        }
+      }
+
+      document.getElementById('roleSelect').addEventListener('change', () => {
+        loadRolePermissions().catch(() => {});
+      });
+
+      document.addEventListener('DOMContentLoaded', function () {
+        setReadOnlyMode(false);
+        const sidebarWrapper = document.querySelector('.sidebar-wrapper');
+        if (sidebarWrapper && OverlayScrollbarsGlobal?.OverlayScrollbars !== undefined) {
+          OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
+            scrollbars: {
+              theme: 'os-theme-light',
+              autoHide: 'leave',
+              clickScroll: true,
+            },
+          });
+        }
+        refreshRolePermissions().catch(() => {});
+      });
+    </script>
+  </body>
+</html>

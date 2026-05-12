@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xác thực tài khoản</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body class="bg-light">
+    <main class="container py-5">
+      <div class="row justify-content-center">
+        <div class="col-lg-9 col-xl-8">
+          <div class="card border-0 shadow">
+            <div class="card-header bg-primary-subtle border-0 py-3">
+              <h1 class="h4 mb-1">Đăng nhập hệ thống</h1>
+              <p class="text-muted mb-0">Quản lý tài khoản nhanh chóng và an toàn.</p>
+            </div>
+            <div class="card-body">
+              <div id="result" class="alert d-none" role="alert"></div>
+
+              <ul class="nav nav-tabs mb-3" id="authTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-login" type="button">
+                    Đăng nhập
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-register" type="button">
+                    Đăng ký
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-forgot" type="button">
+                    Quên mật khẩu
+                  </button>
+                </li>
+              </ul>
+
+              <div class="tab-content">
+                <section class="tab-pane fade show active" id="tab-login">
+                  <form onsubmit="submitLogin(event)">
+                    <div class="mb-3">
+                      <label class="form-label" for="loginUsername">Username</label>
+                      <input id="loginUsername" class="form-control" placeholder="Username hoặc email" required />
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label" for="loginPassword">Password</label>
+                      <input id="loginPassword" type="password" class="form-control" required />
+                    </div>
+                    <button class="btn btn-primary" type="submit">Đăng nhập</button>
+                  </form>
+                </section>
+
+                <section class="tab-pane fade" id="tab-register">
+                  <form onsubmit="submitRegister(event)">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label class="form-label" for="regUsername">Username</label>
+                        <input id="regUsername" class="form-control" minlength="3" required />
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label" for="regPassword">Password</label>
+                        <input id="regPassword" type="password" class="form-control" minlength="6" required />
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label" for="regPasswordConfirm">Xác nhận mật khẩu</label>
+                        <input id="regPasswordConfirm" type="password" class="form-control" minlength="6" required />
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label" for="regFullName">Full name</label>
+                        <input id="regFullName" class="form-control" required />
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label" for="regEmail">Email</label>
+                        <input id="regEmail" type="email" class="form-control" />
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label" for="regPhone">Phone</label>
+                        <input id="regPhone" class="form-control" />
+                      </div>
+                    </div>
+                    <button class="btn btn-success mt-3" type="submit">Đăng ký</button>
+                  </form>
+                </section>
+
+                <section class="tab-pane fade" id="tab-forgot">
+                  <form onsubmit="submitForgotPassword(event)">
+                    <div class="mb-3">
+                      <label class="form-label" for="forgotUsername">Username (có thể để trống)</label>
+                      <input id="forgotUsername" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label" for="forgotEmail">Email (có thể để trống)</label>
+                      <input id="forgotEmail" type="email" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label" for="forgotNewPassword">Mật khẩu mới</label>
+                      <input id="forgotNewPassword" type="password" class="form-control" minlength="6" required />
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label" for="forgotConfirmPassword">Xác nhận mật khẩu mới</label>
+                      <input id="forgotConfirmPassword" type="password" class="form-control" minlength="6" required />
+                    </div>
+                    <button class="btn btn-warning" type="submit">Đặt lại mật khẩu</button>
+                  </form>
+                </section>
+              </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+              <a href="/admin/users" class="btn btn-outline-secondary">Quản lý users</a>
+              <small class="text-muted">API: /api/auth/login, /api/auth/register, /api/auth/forgot-password</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      const resultEl = document.getElementById('result');
+      const LOGIN_REDIRECT_URL = '/admin/users';
+      const LOGIN_REDIRECT_MS = 1200;
+
+      function showResult(message, isError = false) {
+        resultEl.textContent = message;
+        resultEl.classList.remove('d-none', 'alert-danger', 'alert-success');
+        resultEl.classList.add(isError ? 'alert-danger' : 'alert-success');
+      }
+
+      async function callApi(url, body) {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(
+            data.message || data.detail || data.error || `Request failed (${res.status})`
+          );
+        }
+        return data;
+      }
+
+      async function submitLogin(event) {
+        event.preventDefault();
+        const form = event.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        try {
+          if (submitBtn) submitBtn.disabled = true;
+          const payload = {
+            username: document.getElementById('loginUsername').value.trim(),
+            password: document.getElementById('loginPassword').value,
+          };
+          const data = await callApi('/api/auth/login', payload);
+          try {
+            sessionStorage.setItem(
+              'authUser',
+              JSON.stringify({
+                userId: data.userId,
+                username: data.username,
+                fullName: data.fullName || '',
+                lastLoginAt: data.lastLoginAt || null,
+              })
+            );
+          } catch (_) {
+            /* ignore storage errors */
+          }
+          const greet = data.fullName || data.username || '';
+          showResult(
+            `Đăng nhập thành công. Xin chào ${greet}! Đang chuyển vào trang quản lý...`
+          );
+          setTimeout(() => {
+            window.location.assign(LOGIN_REDIRECT_URL);
+          }, LOGIN_REDIRECT_MS);
+        } catch (err) {
+          showResult(err.message || 'Đăng nhập thất bại', true);
+          if (submitBtn) submitBtn.disabled = false;
+        }
+      }
+
+      async function submitRegister(event) {
+        event.preventDefault();
+        try {
+          const password = document.getElementById('regPassword').value;
+          const confirmPassword = document.getElementById('regPasswordConfirm').value;
+          if (password !== confirmPassword) {
+            throw new Error('Mật khẩu xác nhận không khớp');
+          }
+          const payload = {
+            username: document.getElementById('regUsername').value.trim(),
+            password,
+            fullName: document.getElementById('regFullName').value.trim(),
+            email: document.getElementById('regEmail').value.trim(),
+            phone: document.getElementById('regPhone').value.trim(),
+          };
+          const data = await callApi('/api/auth/register', payload);
+          showResult(`Đăng ký thành công: ${data.username} (${data.id})`);
+        } catch (err) {
+          showResult(err.message || 'Đăng ký thất bại', true);
+        }
+      }
+
+      async function submitForgotPassword(event) {
+        event.preventDefault();
+        try {
+          const newPassword = document.getElementById('forgotNewPassword').value;
+          const confirmPassword = document.getElementById('forgotConfirmPassword').value;
+          if (newPassword !== confirmPassword) {
+            throw new Error('Mật khẩu xác nhận không khớp');
+          }
+          const payload = {
+            username: document.getElementById('forgotUsername').value.trim(),
+            email: document.getElementById('forgotEmail').value.trim(),
+            newPassword,
+          };
+          const data = await callApi('/api/auth/forgot-password', payload);
+          showResult(data.message || 'Đặt lại mật khẩu thành công');
+        } catch (err) {
+          showResult(err.message || 'Đặt lại mật khẩu thất bại', true);
+        }
+      }
+    </script>
+  </body>
+</html>

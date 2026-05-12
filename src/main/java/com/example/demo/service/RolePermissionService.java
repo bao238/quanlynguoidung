@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.model.RolePermission;
 import com.example.demo.repository.RolePermissionRepository;
@@ -18,10 +19,13 @@ public class RolePermissionService {
     }
 
     public RolePermission assignPermission(UUID roleId, UUID permissionId) {
-        RolePermission rp = new RolePermission(roleId, permissionId);
-        return repository.save(rp);
+        if (repository.existsByRoleIdAndPermissionId(roleId, permissionId)) {
+            return repository.findByRoleIdAndPermissionId(roleId, permissionId).orElseThrow();
+        }
+        return repository.save(new RolePermission(roleId, permissionId));
     }
 
+    @Transactional
     public void removePermission(UUID roleId, UUID permissionId) {
         repository.deleteByRoleIdAndPermissionId(roleId, permissionId);
     }
