@@ -14,12 +14,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.config.OpenApiConfig;
 import com.example.demo.dto.UserPayload;
 import com.example.demo.model.User;
 import com.example.demo.service.UserService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/users")
+@Tag(name = "Users")
+@SecurityRequirement(name = OpenApiConfig.COOKIE_AUTH_SCHEME)
 public class UserApiController {
 
     private final UserService userService;

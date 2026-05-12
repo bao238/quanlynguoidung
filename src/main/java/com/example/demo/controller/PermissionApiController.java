@@ -13,11 +13,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.config.OpenApiConfig;
 import com.example.demo.model.Permission;
 import com.example.demo.service.PermissionService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/permissions")
+@Tag(name = "Permissions")
+@SecurityRequirement(name = OpenApiConfig.COOKIE_AUTH_SCHEME)
 public class PermissionApiController {
 
     private final PermissionService permissionService;

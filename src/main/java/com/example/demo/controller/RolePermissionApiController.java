@@ -12,12 +12,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.config.OpenApiConfig;
 import com.example.demo.model.RolePermission;
 import com.example.demo.service.RolePermissionService;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/role-permissions")
 @CrossOrigin // cho phép frontend gọi
+@Tag(name = "RolePermissions")
+@SecurityRequirement(name = OpenApiConfig.COOKIE_AUTH_SCHEME)
 public class RolePermissionApiController {
 
     private final RolePermissionService service;

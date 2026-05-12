@@ -13,11 +13,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.config.OpenApiConfig;
 import com.example.demo.model.Role;
 import com.example.demo.service.RoleService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/roles")
+@Tag(name = "Roles")
+@SecurityRequirement(name = OpenApiConfig.COOKIE_AUTH_SCHEME)
 public class RoleApiController {
 
     private final RoleService roleService;

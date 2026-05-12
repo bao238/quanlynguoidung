@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.config.OpenApiConfig;
 import com.example.demo.dto.ForgotPasswordPayload;
 import com.example.demo.dto.LoginPayload;
 import com.example.demo.dto.LoginResponse;
@@ -22,8 +23,13 @@ import java.security.Principal;
 import java.util.List;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Auth")
 public class AuthApiController {
 
     private final UserService userService;
@@ -37,11 +43,13 @@ public class AuthApiController {
     }
 
     @PostMapping("/register")
+    @SecurityRequirements
     public User register(@RequestBody RegisterPayload body) {
         return userService.register(body);
     }
 
     @PostMapping("/login")
+    @SecurityRequirements
     public LoginResponse login(@RequestBody LoginPayload body, HttpServletResponse response) {
         LoginResponse login = userService.login(body);
 
@@ -56,12 +64,14 @@ public class AuthApiController {
     }
 
     @PostMapping("/forgot-password")
+    @SecurityRequirements
     public MessageResponse forgotPassword(@RequestBody ForgotPasswordPayload body) {
         userService.forgotPassword(body);
         return new MessageResponse("Password reset successful");
     }
 
     @PostMapping("/logout")
+    @SecurityRequirement(name = OpenApiConfig.COOKIE_AUTH_SCHEME)
     public MessageResponse logout(HttpServletRequest request, HttpServletResponse response) {
         String token = readCookie(request, AuthTokenService.COOKIE_NAME);
         tokenService.revoke(token);
@@ -76,6 +86,7 @@ public class AuthApiController {
     }
 
     @org.springframework.web.bind.annotation.GetMapping("/me")
+    @SecurityRequirement(name = OpenApiConfig.COOKIE_AUTH_SCHEME)
     public LoginResponse me(Principal principal) {
         if (principal == null || principal.getName() == null || principal.getName().isBlank()) {
             throw new org.springframework.web.server.ResponseStatusException(
