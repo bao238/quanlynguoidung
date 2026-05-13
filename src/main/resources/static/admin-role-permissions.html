@@ -31,6 +31,9 @@
       .table-fixed { table-layout: fixed; }
       .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .readonly-banner { border: 1px dashed var(--bs-warning-border-subtle); background: var(--bs-warning-bg-subtle); }
+      .perm-matrix tbody tr:hover { background-color: var(--bs-secondary-bg); }
+      .summary-table { font-size: 0.9rem; }
+      .summary-table th { white-space: nowrap; }
     </style>
   </head>
   <body class="layout-fixed sidebar-expand-lg sidebar-open bg-body-tertiary">
@@ -89,6 +92,12 @@
                   <p>Phân quyền người dùng</p>
                 </a>
               </li>
+              <li class="nav-item">
+                <a href="/admin/sessions" class="nav-link">
+                  <i class="nav-icon bi bi-clock-history"></i>
+                  <p>Token / Session</p>
+                </a>
+              </li>
             </ul>
           </nav>
         </div>
@@ -116,14 +125,74 @@
             <div id="alert" class="alert alert-danger d-none" role="alert"></div>
             <div id="readonlyNotice" class="alert readonly-banner d-none" role="alert"></div>
 
+            <!-- Bảng tổng: Roles & Permissions -->
+            <div class="row g-3 mb-3">
+              <div class="col-lg-6">
+                <div class="card h-100">
+                  <div class="card-header">
+                    <h3 class="card-title mb-0">
+                      <i class="bi bi-people-fill me-1"></i>
+                      Tổng hợp theo Role
+                    </h3>
+                    <div class="card-tools">
+                      <span class="badge text-bg-secondary" id="rolesSummaryCount">0 role</span>
+                    </div>
+                  </div>
+                  <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 280px;">
+                      <table class="table table-sm table-hover align-middle mb-0 summary-table">
+                        <thead class="table-light sticky-top">
+                          <tr>
+                            <th>Role</th>
+                            <th class="text-end">Số quyền đã gán</th>
+                          </tr>
+                        </thead>
+                        <tbody id="rolesSummaryTable"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="card h-100">
+                  <div class="card-header">
+                    <h3 class="card-title mb-0">
+                      <i class="bi bi-key-fill me-1"></i>
+                      Tổng hợp theo Permission
+                    </h3>
+                    <div class="card-tools">
+                      <span class="badge text-bg-secondary" id="permsSummaryCount">0 quyền</span>
+                    </div>
+                  </div>
+                  <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 280px;">
+                      <table class="table table-sm table-hover align-middle mb-0 summary-table">
+                        <thead class="table-light sticky-top">
+                          <tr>
+                            <th>Code</th>
+                            <th>Tên</th>
+                            <th class="text-end">Số role có quyền</th>
+                          </tr>
+                        </thead>
+                        <tbody id="permsSummaryTable"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ma trận checkbox phân quyền -->
             <div class="card">
               <div class="card-header">
                 <div class="row g-2 align-items-center">
                   <div class="col-md-6">
-                    <h3 class="card-title mb-0">Role và Permission</h3>
+                    <h3 class="card-title mb-0">Gán quyền theo Role (tick = nhận quyền)</h3>
                   </div>
-                  <div class="col-md-6 text-md-end">
-                    <button class="btn btn-outline-secondary" type="button" onclick="refreshRolePermissions()">
+                  <div class="col-md-6 text-md-end d-flex flex-wrap gap-2 justify-content-md-end align-items-center">
+                    <label class="form-label mb-0 me-1">Role:</label>
+                    <select id="roleSelect" class="form-select form-select-sm" style="max-width: 220px;"></select>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" onclick="refreshRolePermissions()">
                       <i class="bi bi-arrow-clockwise me-1"></i>
                       Làm mới
                     </button>
@@ -131,39 +200,68 @@
                 </div>
               </div>
               <div class="card-body">
-                <div class="row g-3 align-items-end mb-3">
-                  <div class="col-md-4">
-                    <label class="form-label">Chọn role</label>
-                    <select id="roleSelect" class="form-select"></select>
+                <div class="row g-2 mb-3 align-items-end">
+                  <div class="col-md-5 col-lg-4">
+                    <label for="roleSearchInput" class="form-label mb-0 small text-body-secondary"
+                      >Tìm role (lọc dropdown)</label
+                    >
+                    <input
+                      type="search"
+                      id="roleSearchInput"
+                      class="form-control"
+                      placeholder="Tên, mã hoặc ID role…"
+                      autocomplete="off"
+                      aria-label="Tìm role"
+                    />
                   </div>
-                  <div class="col-md-5">
-                    <label class="form-label">Gán permission</label>
-                    <select id="permissionSelect" class="form-select"></select>
-                  </div>
-                  <div class="col-md-3">
-                    <button class="btn btn-primary w-100" type="button" onclick="assignPermission()">
-                      <i class="bi bi-link-45deg me-1"></i>
-                      Gán quyền
-                    </button>
+                  <div class="col-md-7 col-lg-8">
+                    <label for="permSearchInput" class="form-label mb-0 small text-body-secondary"
+                      >Tìm quyền để tick</label
+                    >
+                    <div class="input-group">
+                      <span class="input-group-text bg-body-secondary" title="Lọc theo code, tên, module, mô tả"
+                        ><i class="bi bi-search"></i
+                      ></span>
+                      <input
+                        type="search"
+                        id="permSearchInput"
+                        class="form-control"
+                        placeholder="Code, tên, module, mô tả…"
+                        autocomplete="off"
+                        aria-label="Tìm quyền trong bảng"
+                      />
+                      <button
+                        class="btn btn-outline-secondary"
+                        type="button"
+                        onclick="clearPermSearch()"
+                        title="Xóa ô tìm quyền"
+                      >
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
+                <p class="text-muted small mb-3">
+                  Chọn role, sau đó tick vào các permission tương ứng. Bỏ tick sẽ thu hồi quyền khỏi role đó.
+                </p>
                 <div class="table-responsive">
-                  <table class="table table-hover align-middle mb-0 table-fixed">
+                  <table class="table table-bordered table-hover align-middle mb-0 perm-matrix table-fixed">
                     <thead class="table-light">
                       <tr>
-                        <th style="width: 240px;">Permission ID</th>
-                        <th style="width: 200px;">Code</th>
-                        <th style="width: 200px;">Name</th>
-                        <th>Description</th>
-                        <th style="width: 120px;" class="text-end">Actions</th>
+                        <th style="width: 56px;" class="text-center" title="Gán quyền">
+                          <i class="bi bi-check2-square"></i>
+                        </th>
+                        <th style="width: 160px;">Code</th>
+                        <th style="width: 180px;">Tên</th>
+                        <th style="width: 120px;">Module</th>
+                        <th>Mô tả</th>
                       </tr>
                     </thead>
-                    <tbody id="permissionTable"></tbody>
+                    <tbody id="permissionMatrixBody"></tbody>
                   </table>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </main>
@@ -194,10 +292,15 @@
 
       let rolesCache = [];
       let permissionsCache = [];
+      /** @type {Map<string, Set<string>>} roleId -> Set of permissionId */
+      let roleToPermIds = new Map();
       let readOnlyMode = false;
+      /** đang cập nhật checkbox programmatically → bỏ qua sự kiện change */
+      let suppressCheckboxChange = false;
 
       const alertEl = document.getElementById('alert');
       const readonlyNoticeEl = document.getElementById('readonlyNotice');
+
       function showError(message) {
         alertEl.textContent = message;
         alertEl.classList.remove('d-none');
@@ -213,84 +316,254 @@
           readonlyNoticeEl.textContent = message;
           readonlyNoticeEl.classList.toggle('d-none', !enabled);
         }
-        const assignBtn = document.querySelector('button[onclick="assignPermission()"]');
         const roleSelect = document.getElementById('roleSelect');
-        const permissionSelect = document.getElementById('permissionSelect');
-        if (assignBtn) assignBtn.disabled = enabled;
-        if (permissionSelect) permissionSelect.disabled = enabled;
-        if (roleSelect) roleSelect.disabled = false; // vẫn cho đổi role để xem
+        if (roleSelect) roleSelect.disabled = false;
+        document.querySelectorAll('.perm-cb').forEach((cb) => {
+          cb.disabled = enabled;
+        });
       }
 
       function roleName(role) {
         return role.name || role.code || role.id;
       }
 
+      function escapeHtml(s) {
+        if (s == null || s === '') return '';
+        return String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function getRoleSearchQuery() {
+        return (document.getElementById('roleSearchInput')?.value || '').trim().toLowerCase();
+      }
+
+      function getPermSearchQuery() {
+        return (document.getElementById('permSearchInput')?.value || '').trim().toLowerCase();
+      }
+
+      /** Lọc dropdown Role theo ô tìm; giữ selection nếu role vẫn còn trong danh sách lọc. */
+      function renderRoleOptionsFiltered() {
+        const select = document.getElementById('roleSelect');
+        const q = getRoleSearchQuery();
+        const prev = select.value;
+        const filtered = !q
+          ? [...rolesCache]
+          : rolesCache.filter((r) => {
+              const n = roleName(r).toLowerCase();
+              const c = (r.code || '').toLowerCase();
+              const id = String(r.id || '').toLowerCase();
+              return n.includes(q) || c.includes(q) || id.includes(q);
+            });
+        select.innerHTML = '';
+        filtered.forEach((r) => {
+          const opt = document.createElement('option');
+          opt.value = r.id;
+          opt.textContent = roleName(r);
+          select.appendChild(opt);
+        });
+        if (filtered.some((r) => r.id === prev)) {
+          select.value = prev;
+        } else {
+          select.value = filtered[0]?.id || '';
+        }
+        return prev !== select.value;
+      }
+
+      function clearPermSearch() {
+        const el = document.getElementById('permSearchInput');
+        if (el) {
+          el.value = '';
+          renderPermissionMatrix();
+        }
+      }
+
       async function loadRoles() {
         const res = await fetch(API_ROLES);
         if (!res.ok) throw new Error(`Load roles failed (${res.status})`);
         rolesCache = await res.json();
-        const roleSelect = document.getElementById('roleSelect');
-        roleSelect.innerHTML = '';
-        rolesCache.forEach((r) => {
-          const opt = document.createElement('option');
-          opt.value = r.id;
-          opt.textContent = roleName(r);
-          roleSelect.appendChild(opt);
-        });
+        renderRoleOptionsFiltered();
       }
 
       async function loadPermissions() {
         const res = await fetch(API_PERMS);
         if (!res.ok) throw new Error(`Load permissions failed (${res.status})`);
         permissionsCache = await res.json();
-        const permSelect = document.getElementById('permissionSelect');
-        permSelect.innerHTML = '';
-        permissionsCache.forEach((p) => {
-          const opt = document.createElement('option');
-          opt.value = p.id;
-          opt.textContent = p.name || p.code || p.description || p.id;
-          permSelect.appendChild(opt);
-        });
       }
 
-      function renderRolePermissions(list) {
-        const tbody = document.getElementById('permissionTable');
-        if (!list.length) {
-          tbody.innerHTML =
-            '<tr><td colspan="5" class="text-center text-muted py-4">Chưa có quyền</td></tr>';
-          return;
-        }
-        tbody.innerHTML = list
+      /** Tải danh sách permissionId cho mọi role (phục vụ bảng tổng) */
+      async function loadAllRolePermissionMaps() {
+        roleToPermIds = new Map();
+        await Promise.all(
+          rolesCache.map(async (r) => {
+            try {
+              const res = await fetch(`${API_ROLE_PERMS}/${r.id}`);
+              if (!res.ok) {
+                roleToPermIds.set(r.id, new Set());
+                return;
+              }
+              const list = await res.json();
+              const set = new Set(list.map((rp) => rp.permissionId));
+              roleToPermIds.set(r.id, set);
+            } catch {
+              roleToPermIds.set(r.id, new Set());
+            }
+          })
+        );
+      }
+
+      function renderSummaryTables() {
+        const sortedRoles = [...rolesCache].sort((a, b) => roleName(a).localeCompare(roleName(b), 'vi'));
+        document.getElementById('rolesSummaryCount').textContent = `${sortedRoles.length} role`;
+        const rtbody = document.getElementById('rolesSummaryTable');
+        rtbody.innerHTML = sortedRoles
+          .map((r) => {
+            const n = (roleToPermIds.get(r.id) || new Set()).size;
+            return `<tr>
+              <td class="truncate" title="${escapeHtml(roleName(r))}">${escapeHtml(roleName(r))}</td>
+              <td class="text-end"><span class="badge text-bg-primary">${n}</span></td>
+            </tr>`;
+          })
+          .join('');
+
+        const sortedPerms = [...permissionsCache].sort((a, b) => {
+          const ma = (a.module || '').localeCompare(b.module || '', 'vi');
+          if (ma !== 0) return ma;
+          return (a.code || '').localeCompare(b.code || '', 'vi');
+        });
+        document.getElementById('permsSummaryCount').textContent = `${sortedPerms.length} quyền`;
+        const ptbody = document.getElementById('permsSummaryTable');
+        ptbody.innerHTML = sortedPerms
           .map((p) => {
-            return `
-              <tr>
-                <td class="truncate" title="${p.id}">${p.id}</td>
-                <td>${p.code ?? ''}</td>
-                <td>${p.name ?? ''}</td>
-                <td>${p.description ?? ''}</td>
-                <td class="text-end">
-                  <button class="btn btn-sm btn-outline-danger" onclick="removePermission('${p.id}')" ${readOnlyMode ? 'disabled' : ''}>
-                    <i class="bi bi-x-lg"></i>
-                  </button>
-                </td>
-              </tr>
-            `;
+            let roleCount = 0;
+            roleToPermIds.forEach((set) => {
+              if (set.has(p.id)) roleCount++;
+            });
+            return `<tr>
+              <td class="truncate font-monospace small" title="${escapeHtml(p.code)}">${escapeHtml(p.code)}</td>
+              <td class="truncate" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</td>
+              <td class="text-end"><span class="badge ${roleCount ? 'text-bg-success' : 'text-bg-secondary'}">${roleCount}</span></td>
+            </tr>`;
           })
           .join('');
       }
 
-      async function loadRolePermissions() {
-        const roleId = document.getElementById('roleSelect').value;
+      function getSelectedRoleId() {
+        return document.getElementById('roleSelect').value;
+      }
+
+      function renderPermissionMatrix() {
+        const roleId = getSelectedRoleId();
+        const tbody = document.getElementById('permissionMatrixBody');
+        if (!permissionsCache.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" class="text-center text-muted py-4">Chưa có dữ liệu permission</td></tr>';
+          return;
+        }
         if (!roleId) {
-          renderRolePermissions([]);
+          tbody.innerHTML =
+            '<tr><td colspan="5" class="text-center text-muted py-4">Không có role khớp ô tìm — xóa bớt chữ ở &quot;Tìm role&quot; hoặc chọn role khác.</td></tr>';
+          return;
+        }
+
+        const assigned = roleToPermIds.get(roleId) || new Set();
+        const pq = getPermSearchQuery();
+        const sorted = [...permissionsCache].sort((a, b) => {
+          const ma = (a.module || '').localeCompare(b.module || '', 'vi');
+          if (ma !== 0) return ma;
+          return (a.code || '').localeCompare(b.code || '', 'vi');
+        });
+        const filtered = pq
+          ? sorted.filter((p) => {
+              const hay = [p.code, p.name, p.module, p.description]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+              return hay.includes(pq);
+            })
+          : sorted;
+
+        if (!filtered.length) {
+          tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Không có quyền khớp “${escapeHtml(
+            getPermSearchQuery()
+          )}”</td></tr>`;
+          return;
+        }
+
+        suppressCheckboxChange = true;
+        tbody.innerHTML = filtered
+          .map((p) => {
+            const checked = assigned.has(p.id);
+            const dis = readOnlyMode ? 'disabled' : '';
+            return `<tr data-perm-id="${p.id}">
+              <td class="text-center">
+                <input type="checkbox" class="form-check-input perm-cb" data-permission-id="${p.id}" ${checked ? 'checked' : ''} ${dis} />
+              </td>
+              <td class="truncate font-monospace small" title="${escapeHtml(p.code)}">${escapeHtml(p.code)}</td>
+              <td class="truncate" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</td>
+              <td class="truncate small" title="${escapeHtml(p.module)}">${escapeHtml(p.module || '—')}</td>
+              <td class="small text-muted">${escapeHtml(p.description || '')}</td>
+            </tr>`;
+          })
+          .join('');
+        suppressCheckboxChange = false;
+      }
+
+      async function syncRolePermCacheForRole(roleId) {
+        if (!roleId) {
           return;
         }
         const res = await fetch(`${API_ROLE_PERMS}/${roleId}`);
         if (!res.ok) throw new Error(`Load role permissions failed (${res.status})`);
         const rolePerms = await res.json();
-        const permIds = new Set(rolePerms.map((rp) => rp.permissionId));
-        const assigned = permissionsCache.filter((p) => permIds.has(p.id));
-        renderRolePermissions(assigned);
+        roleToPermIds.set(roleId, new Set(rolePerms.map((rp) => rp.permissionId)));
+      }
+
+      async function onPermissionCheckboxChange(ev) {
+        if (suppressCheckboxChange) return;
+        const cb = ev.target;
+        if (!cb.classList.contains('perm-cb')) return;
+
+        const roleId = getSelectedRoleId();
+        const permissionId = cb.getAttribute('data-permission-id');
+        if (!roleId || !permissionId) return;
+
+        const wantOn = cb.checked;
+        cb.disabled = true;
+        clearError();
+        try {
+          const params = new URLSearchParams({ roleId, permissionId });
+          if (wantOn) {
+            const res = await fetch(`${API_ROLE_PERMS}?${params.toString()}`, { method: 'POST' });
+            if (!res.ok) {
+              if (res.status === 403) {
+                setReadOnlyMode(true);
+                throw new Error('Bạn không có quyền gán permission (chỉ xem).');
+              }
+              throw new Error(`Gán quyền thất bại (${res.status})`);
+            }
+          } else {
+            const res = await fetch(`${API_ROLE_PERMS}?${params.toString()}`, { method: 'DELETE' });
+            if (!res.ok) {
+              if (res.status === 403) {
+                setReadOnlyMode(true);
+                throw new Error('Bạn không có quyền xóa permission (chỉ xem).');
+              }
+              throw new Error(`Thu hồi quyền thất bại (${res.status})`);
+            }
+          }
+          await syncRolePermCacheForRole(roleId);
+          renderSummaryTables();
+        } catch (err) {
+          showError(err.message || 'Lỗi cập nhật quyền');
+          suppressCheckboxChange = true;
+          cb.checked = !wantOn;
+          suppressCheckboxChange = false;
+        } finally {
+          cb.disabled = readOnlyMode;
+        }
       }
 
       async function refreshRolePermissions() {
@@ -298,59 +571,87 @@
         try {
           await loadRoles();
           await loadPermissions();
-          await loadRolePermissions();
+          await loadAllRolePermissionMaps();
+          renderSummaryTables();
+          if (rolesCache.length) {
+            await syncRolePermCacheForRole(getSelectedRoleId());
+          }
+          renderPermissionMatrix();
         } catch (err) {
           showError(err.message || 'Failed to load role permissions');
         }
       }
 
-      async function assignPermission() {
+      document.getElementById('roleSelect').addEventListener('change', async () => {
         clearError();
-        const roleId = document.getElementById('roleSelect').value;
-        const permissionId = document.getElementById('permissionSelect').value;
-        if (!roleId || !permissionId) return;
         try {
-          const params = new URLSearchParams({ roleId, permissionId });
-          const res = await fetch(`${API_ROLE_PERMS}?${params.toString()}`, { method: 'POST' });
-          if (!res.ok) {
-            if (res.status === 403) {
-              setReadOnlyMode(true);
-              throw new Error('Bạn không có quyền gán permission (chỉ xem).');
-            }
-            throw new Error(`Assign permission failed (${res.status})`);
-          }
-          await loadRolePermissions();
+          await syncRolePermCacheForRole(getSelectedRoleId());
+          renderPermissionMatrix();
         } catch (err) {
-          showError(err.message || 'Failed to assign permission');
+          showError(err.message || 'Không tải được quyền của role');
         }
-      }
-
-      async function removePermission(permissionId) {
-        clearError();
-        const roleId = document.getElementById('roleSelect').value;
-        if (!roleId || !permissionId) return;
-        if (!confirm('Bạn có chắc chắn xoá không?')) return;
-        try {
-          const params = new URLSearchParams({ roleId, permissionId });
-          const res = await fetch(`${API_ROLE_PERMS}?${params.toString()}`, { method: 'DELETE' });
-          if (!res.ok) {
-            if (res.status === 403) {
-              setReadOnlyMode(true);
-              throw new Error('Bạn không có quyền xóa permission (chỉ xem).');
-            }
-            throw new Error(`Remove permission failed (${res.status})`);
-          }
-          await loadRolePermissions();
-        } catch (err) {
-          showError(err.message || 'Failed to remove permission');
-        }
-      }
-
-      document.getElementById('roleSelect').addEventListener('change', () => {
-        loadRolePermissions().catch(() => {});
       });
 
-      document.addEventListener('DOMContentLoaded', function () {
+      const roleSearchInput = document.getElementById('roleSearchInput');
+      if (roleSearchInput) {
+        roleSearchInput.addEventListener('input', async () => {
+          const before = getSelectedRoleId();
+          renderRoleOptionsFiltered();
+          const after = getSelectedRoleId();
+          if (after !== before) {
+            clearError();
+            try {
+              await syncRolePermCacheForRole(after);
+              renderPermissionMatrix();
+            } catch (err) {
+              showError(err.message || 'Không tải được quyền của role');
+            }
+          }
+        });
+      }
+
+      const permSearchInput = document.getElementById('permSearchInput');
+      if (permSearchInput) {
+        permSearchInput.addEventListener('input', () => {
+          renderPermissionMatrix();
+        });
+      }
+
+      document.getElementById('permissionMatrixBody').addEventListener('change', (e) => {
+        onPermissionCheckboxChange(e);
+      });
+
+      async function ensureCanManageRolePermissions() {
+        try {
+          const res = await fetch('/api/auth/me');
+          if (!res.ok) {
+            window.location.assign('/auth');
+            return false;
+          }
+          const u = await res.json();
+          const auths = (u.authorities || []).map((a) => String(a || '').toUpperCase());
+
+          const canAdmin = auths.includes('ROLE_ADMIN') || auths.includes('ROLE_SUPER_ADMIN');
+          const canView = auths.includes('ROLE_VIEW');
+
+          if (!canAdmin && !canView) {
+            window.location.assign('/admin/users');
+            return false;
+          }
+
+          // Chỉ có ROLE_VIEW → bật read-only để không tick được.
+          if (!canAdmin && canView) {
+            setReadOnlyMode(true, 'Bạn chỉ có quyền xem phân quyền (ROLE_VIEW), không được gán/thu hồi quyền.');
+          }
+
+          return true;
+        } catch (_) {
+          window.location.assign('/auth');
+          return false;
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', async function () {
         setReadOnlyMode(false);
         const sidebarWrapper = document.querySelector('.sidebar-wrapper');
         if (sidebarWrapper && OverlayScrollbarsGlobal?.OverlayScrollbars !== undefined) {
@@ -362,6 +663,8 @@
             },
           });
         }
+        const allowed = await ensureCanManageRolePermissions();
+        if (!allowed) return;
         refreshRolePermissions().catch(() => {});
       });
     </script>

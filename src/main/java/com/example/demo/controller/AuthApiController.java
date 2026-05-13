@@ -14,6 +14,7 @@ import com.example.demo.dto.RegisterPayload;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.AuthTokenService;
+import com.example.demo.security.UserAuthorityService;
 import com.example.demo.service.UserService;
 
 import jakarta.servlet.http.Cookie;
@@ -35,11 +36,14 @@ public class AuthApiController {
     private final UserService userService;
     private final AuthTokenService tokenService;
     private final UserRepository userRepository;
+    private final UserAuthorityService userAuthorityService;
 
-    public AuthApiController(UserService userService, AuthTokenService tokenService, UserRepository userRepository) {
+    public AuthApiController(UserService userService, AuthTokenService tokenService, UserRepository userRepository,
+                             UserAuthorityService userAuthorityService) {
         this.userService = userService;
         this.tokenService = tokenService;
         this.userRepository = userRepository;
+        this.userAuthorityService = userAuthorityService;
     }
 
     @PostMapping("/register")
@@ -105,7 +109,7 @@ public class AuthApiController {
             response.message = "OK";
             return response;
         }
-        User u = userRepository.findByUsernameIgnoreCaseAndDeletedAtIsNull(principal.getName())
+        User u = userRepository.findByUsernameIgnoreCaseAndDeletedAtIsNullFetchRoles(principal.getName())
             .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
                 org.springframework.http.HttpStatus.UNAUTHORIZED,
                 "Unauthorized"
@@ -117,7 +121,8 @@ public class AuthApiController {
         response.fullName = u.getFullName();
         response.isActive = u.getIsActive();
         response.lastLoginAt = u.getLastLoginAt();
-        response.authorities = currentAuthorities();
+        // Luôn tính từ DB (role + role_permissions), tránh lệch với UI khi SecurityContext chưa đủ quyền
+        response.authorities = userAuthorityService.resolveAuthorityStrings(u);
         response.message = "OK";
         return response;
     }

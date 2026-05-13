@@ -21,6 +21,11 @@ public class AdminPageController {
         return "forward:/admin-role-permissions.html";
     }
 
+    @GetMapping("/admin/sessions")
+    public String sessions() {
+        return "forward:/admin-token-sessions.html";
+    }
+
     @GetMapping("/auth")
     public String authPage() {
         return "forward:/auth.html";

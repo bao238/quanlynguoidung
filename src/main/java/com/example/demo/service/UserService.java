@@ -21,6 +21,7 @@ import com.example.demo.model.User;
 import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.AuthTokenService;
+import com.example.demo.security.UserAuthorityService;
 
 @Service
 public class UserService {
@@ -28,12 +29,15 @@ public class UserService {
     private final UserRepository userRepo;
     private final RoleRepository roleRepo;
     private final AuthTokenService authTokenService;
+    private final UserAuthorityService userAuthorityService;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public UserService(UserRepository userRepo, RoleRepository roleRepo, AuthTokenService authTokenService) {
+    public UserService(UserRepository userRepo, RoleRepository roleRepo, AuthTokenService authTokenService,
+                       UserAuthorityService userAuthorityService) {
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
         this.authTokenService = authTokenService;
+        this.userAuthorityService = userAuthorityService;
     }
 
     public User createUser(UserPayload body) {
@@ -226,6 +230,7 @@ public class UserService {
             response.isActive = Boolean.TRUE;
             response.lastLoginAt = LocalDateTime.now();
             response.message = "Login successful";
+            response.authorities = List.of("ROLE_USER", "ROLE_ADMIN");
             return response;
         }
 
@@ -261,6 +266,8 @@ public class UserService {
         response.isActive = user.getIsActive();
         response.lastLoginAt = user.getLastLoginAt();
         response.message = "Login successful";
+        userRepo.findByUsernameIgnoreCaseAndDeletedAtIsNullFetchRoles(user.getUsername())
+            .ifPresent(u -> response.authorities = userAuthorityService.resolveAuthorityStrings(u));
         return response;
     }
 

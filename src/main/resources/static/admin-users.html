@@ -28,24 +28,65 @@
     />
     <link rel="stylesheet" href="/adminlte/css/adminlte.css" />
     <style>
-      .table-fixed { table-layout: fixed; }
-      .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .users-table th { white-space: nowrap; }
-      .users-table td { vertical-align: middle; }
-      .users-table .col-actions { white-space: nowrap; }
-      .stat-pill { border: 1px solid var(--bs-border-color); border-radius: 999px; padding: 0.35rem 0.75rem; }
-      .role-chip { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0.15rem 0.35rem 0.15rem 0; padding: 0.25rem 0.55rem; border: 1px solid var(--bs-border-color); border-radius: 999px; background: var(--bs-body-bg); }
-      .role-chip button { border: 0; background: transparent; color: var(--bs-danger); padding: 0; line-height: 1; }
-      .role-chip--student { border-color: rgba(25, 135, 84, .35); }
-      .role-chip--lecturer { border-color: rgba(13, 110, 253, .35); }
-      .role-chip--admin { border-color: rgba(220, 53, 69, .35); }
-      .role-filter-select {
-        min-width: 260px;
-        max-width: 360px;
+      /* Trang quản lý user: vừa gọn vừa đọc được (không quá nhỏ) */
+      .users-admin-page .app-content-header h1 { font-size: 1.35rem; }
+      .users-admin-page .card-title { font-size: 1.05rem; }
+      .users-admin-page .card-header,
+      .users-admin-page .card-body.border-bottom { padding-top: 0.85rem; padding-bottom: 0.85rem; }
+      .users-admin-page .table-fixed { table-layout: fixed; }
+      .users-admin-page .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .users-admin-page .users-table { font-size: 1rem; }
+      .users-admin-page .users-table thead th { font-size: 0.9375rem; font-weight: 600; }
+      .users-admin-page .users-table th,
+      .users-admin-page .users-table td { padding: 0.5rem 0.6rem; vertical-align: middle; }
+      .users-admin-page .users-table .col-actions { white-space: nowrap; min-width: 9rem; }
+      /* Cột Roles cố định hẹp — phần width thừa của bảng chuyển sang cột Email (col không set width). */
+      .users-admin-page .users-table .col-roles {
+        white-space: normal;
+        word-break: break-word;
+        vertical-align: middle;
+        line-height: 1.35;
       }
+      .users-admin-page .btn-action-compact {
+        padding: 0.28rem 0.5rem;
+        font-size: 0.9375rem;
+        line-height: 1.25;
+      }
+      .users-admin-page .stat-pill {
+        border: 1px solid var(--bs-border-color);
+        border-radius: 999px;
+        padding: 0.28rem 0.6rem;
+        font-size: 0.875rem;
+      }
+      .users-admin-page .role-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin: 0.1rem 0.28rem 0.1rem 0;
+        padding: 0.18rem 0.5rem;
+        font-size: 0.875rem;
+        border: 1px solid var(--bs-border-color);
+        border-radius: 999px;
+        background: var(--bs-body-bg);
+      }
+      .users-admin-page .role-chip button { border: 0; background: transparent; color: var(--bs-danger); padding: 0; line-height: 1; font-size: 0.9rem; }
+      .users-admin-page .role-chip--student { border-color: rgba(25, 135, 84, .35); }
+      .users-admin-page .role-chip--lecturer { border-color: rgba(13, 110, 253, .35); }
+      .users-admin-page .role-chip--admin { border-color: rgba(220, 53, 69, .35); }
+      .users-admin-page .role-filter-select {
+        min-width: 10.5rem;
+        max-width: 16rem;
+      }
+      .users-admin-page .sidebar-compact .nav-link p {
+        font-size: 0.875rem;
+        line-height: 1.3;
+        margin-bottom: 0;
+        word-break: break-word;
+      }
+      .users-admin-page .sidebar-compact .nav-icon { font-size: 1.05rem; }
     </style>
   </head>
-  <body class="layout-fixed sidebar-expand-lg sidebar-open bg-body-tertiary">
+  <body class="layout-fixed sidebar-expand-lg sidebar-open bg-body-tertiary users-admin-page">
     <div class="app-wrapper">
       <nav class="app-header navbar navbar-expand bg-body">
         <div class="container-fluid">
@@ -61,7 +102,7 @@
           </ul>
           <ul class="navbar-nav ms-auto align-items-center">
             <li class="nav-item d-none d-md-block">
-              <span id="authGreeting" class="nav-link py-1 text-body-secondary small mb-0"></span>
+              <span id="authGreeting" class="nav-link py-1 text-body-secondary mb-0"></span>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="#" title="Đăng xuất / đổi tài khoản" id="authLink">
@@ -77,7 +118,7 @@
         </div>
       </nav>
 
-      <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+      <aside class="app-sidebar bg-body-secondary shadow sidebar-compact" data-bs-theme="dark">
         <div class="sidebar-brand">
           <a href="/admin/users" class="brand-link">
             <img
@@ -85,7 +126,7 @@
               alt="AdminLTE Logo"
               class="brand-image opacity-75 shadow"
             />
-            <span class="brand-text fw-light">AdminLTE 4</span>
+            <span class="brand-text fw-light">QLND</span>
           </a>
         </div>
         <div class="sidebar-wrapper">
@@ -103,10 +144,16 @@
                   <p>Quản lý người dùng</p>
                 </a>
               </li>
-              <li class="nav-item">
+              <li id="navRolePermissionsItem" class="nav-item d-none">
                 <a href="/admin/role-permissions" class="nav-link">
                   <i class="nav-icon bi bi-shield-lock"></i>
                   <p>Phân quyền người dùng</p>
+                </a>
+              </li>
+              <li id="navTokenSessionsItem" class="nav-item d-none">
+                <a href="/admin/sessions" class="nav-link">
+                  <i class="nav-icon bi bi-clock-history"></i>
+                  <p>Token / Session</p>
                 </a>
               </li>
             </ul>
@@ -142,28 +189,27 @@
                     <h3 class="card-title mb-0">Danh sách người dùng</h3>
                   </div>
                   <div class="col-md-6 text-md-end">
-                    <a class="btn btn-outline-dark me-2" href="/auth">
-                      <i class="bi bi-box-arrow-in-right me-1"></i>
-                      Auth
+                    <a class="btn btn-outline-dark me-1" href="/auth" title="Đăng nhập / đăng ký">
+                      <i class="bi bi-box-arrow-in-right"></i>
+                      <span class="d-none d-xl-inline ms-1">Auth</span>
                     </a>
-                    <button class="btn btn-primary" type="button" onclick="openUserCreate()">
-                      <i class="bi bi-plus-lg me-1"></i>
-                      Thêm người dùng
+                    <button id="btnAddUser" class="btn btn-primary d-none" type="button" onclick="openUserCreate()">
+                      <i class="bi bi-plus-lg"></i>
+                      <span class="d-none d-xl-inline ms-1">Thêm</span>
                     </button>
-                    <button class="btn btn-outline-secondary ms-2" type="button" onclick="loadUsers()">
-                      <i class="bi bi-arrow-clockwise me-1"></i>
-                      Làm mới
+                    <button class="btn btn-outline-secondary ms-1" type="button" onclick="loadUsers()" title="Làm mới">
+                      <i class="bi bi-arrow-clockwise"></i>
                     </button>
                   </div>
                 </div>
               </div>
               <div class="card-body border-bottom">
-                <div class="row g-2">
+                <div class="row g-2 align-items-center">
                   <div class="col-lg-4">
                     <input
                       id="searchKeyword"
                       class="form-control"
-                      placeholder="Từ khóa tổng hợp (username/email...)"
+                      placeholder="Từ khóa (username/email...)"
                       onkeydown="if(event.key === 'Enter'){event.preventDefault(); applySearch();}"
                     />
                   </div>
@@ -179,23 +225,31 @@
                     <input
                       id="searchByName"
                       class="form-control"
-                      placeholder="Lọc theo tên/username"
+                      placeholder="Tên / username"
                       onkeydown="if(event.key === 'Enter'){event.preventDefault(); applySearch();}"
                     />
                   </div>
                   <div class="col-lg-2 text-lg-end">
-                    <button class="btn btn-outline-primary" type="button" onclick="applySearch()">
-                      <i class="bi bi-search me-1"></i>
-                      Tìm kiếm
+                    <button class="btn btn-outline-primary" type="button" onclick="applySearch()" title="Tìm kiếm">
+                      <i class="bi bi-search"></i>
                     </button>
-                    <button class="btn btn-outline-secondary ms-2" type="button" onclick="clearSearchAndReload()">
-                      Xóa lọc
+                    <button class="btn btn-outline-secondary ms-1" type="button" onclick="clearSearchAndReload()" title="Xóa lọc">
+                      <i class="bi bi-x-lg"></i>
                     </button>
                   </div>
                 </div>
-                <div class="d-flex mt-3 align-items-center gap-2 flex-wrap">
-                  <span class="text-body-secondary small me-1">Phân loại role:</span>
-                  <select id="roleFilterSelect" class="form-select form-select-sm role-filter-select" aria-label="Role filter">
+                <div class="d-flex mt-2 align-items-center gap-2 flex-wrap">
+                  <span class="text-body-secondary me-1">Role:</span>
+                  <input
+                    type="search"
+                    id="roleSearchInput"
+                    class="form-control"
+                    style="max-width: 12rem;"
+                    placeholder="Tìm role..."
+                    autocomplete="off"
+                    aria-label="Tìm role"
+                  />
+                  <select id="roleFilterSelect" class="form-select role-filter-select" aria-label="Role filter">
                     <option value="ALL">Tất cả role</option>
                   </select>
                   <span id="userCount" class="stat-pill text-body-secondary ms-auto">Tổng users: 0</span>
@@ -204,16 +258,26 @@
               <div class="card-body p-0">
                 <div class="table-responsive">
                   <table class="table table-hover align-middle mb-0 table-fixed users-table">
+                    <colgroup>
+                      <col style="width: 10.5rem" />
+                      <col style="width: 6.25rem" />
+                      <col style="width: 7.25rem" />
+                      <col style="width: 26%" />
+                      <col style="width: 5rem" />
+                      <col style="width: 3.5rem" />
+                      <col style="width: 7rem" />
+                      <col style="width: 9rem" />
+                    </colgroup>
                     <thead class="table-light">
                       <tr>
-                        <th style="width: 240px;">ID</th>
-                        <th style="width: 160px;">Username</th>
-                        <th style="width: 180px;">Họ tên</th>
-                        <th style="width: 200px;">Email</th>
-                        <th style="width: 140px;">SĐT</th>
-                        <th style="width: 110px;">Kích hoạt</th>
-                        <th style="width: 260px;">Roles</th>
-                        <th style="width: 170px;" class="text-end">Actions</th>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Họ tên</th>
+                        <th>Email</th>
+                        <th>SĐT</th>
+                        <th>Kích hoạt</th>
+                        <th class="col-roles">Roles</th>
+                        <th class="text-end col-actions">Thao tác</th>
                       </tr>
                     </thead>
                     <tbody id="userTable"></tbody>
@@ -293,6 +357,13 @@
             <input type="hidden" id="roleUserId" />
             <div class="mb-3">
               <label for="roleAssignSelect" class="form-label">Chọn role</label>
+              <input
+                type="search"
+                id="roleAssignSearchInput"
+                class="form-control mb-2"
+                placeholder="Tìm role..."
+                autocomplete="off"
+              />
               <select id="roleAssignSelect" class="form-select"></select>
             </div>
             <div class="text-end">
@@ -336,6 +407,8 @@
       let canUpdateUser = false;
       let canDeleteUser = false;
       let canAssignRole = false;
+      let canRemoveRole = false;
+      let authPermissionsResolved = false;
 
       const userModal = new bootstrap.Modal(document.getElementById('userModal'));
       const roleModal = new bootstrap.Modal(document.getElementById('roleModal'));
@@ -361,23 +434,47 @@
         });
       }
 
+      /** Rút gọn UUID / ID dài; cột ID ~10.5rem nên hiện ~18 ký tự + …; hover title vẫn đủ ID. */
+      function formatShortId(id) {
+        const s = String(id ?? '');
+        if (s.length <= 18) return escapeHtml(s);
+        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)) {
+          return escapeHtml(s.slice(0, 18) + '…');
+        }
+        return escapeHtml(s.slice(0, 16) + '…');
+      }
+
       async function readErrorMessage(res, fallback) {
         const data = await res.json().catch(() => null);
         return data?.message || fallback;
       }
 
       function hasAnyAuthority(...names) {
-        return names.some((name) => currentAuthorities.includes(name));
+        const upper = (currentAuthorities || []).map((a) => String(a || '').toUpperCase());
+        return names.some((name) => upper.includes(String(name || '').toUpperCase()));
       }
 
       function applyPermissionUi() {
         canCreateUser = hasAnyAuthority('ROLE_ADMIN', 'USER_CREATE');
         canUpdateUser = hasAnyAuthority('ROLE_ADMIN', 'USER_UPDATE');
         canDeleteUser = hasAnyAuthority('ROLE_ADMIN', 'USER_DELETE');
-        canAssignRole = hasAnyAuthority('ROLE_ADMIN', 'USER_CREATE');
+        canAssignRole = hasAnyAuthority('ROLE_ADMIN', 'USER_CREATE', 'USER_UPDATE');
+        canRemoveRole = hasAnyAuthority('ROLE_ADMIN', 'USER_UPDATE', 'USER_DELETE');
 
-        const createBtn = document.querySelector('button[onclick="openUserCreate()"]');
-        if (createBtn) createBtn.classList.toggle('d-none', !canCreateUser);
+        const createBtn = document.getElementById('btnAddUser');
+        if (createBtn) {
+          createBtn.classList.toggle('d-none', !canCreateUser);
+        }
+        const navRp = document.getElementById('navRolePermissionsItem');
+        if (navRp) {
+          navRp.classList.toggle('d-none', !hasAnyAuthority('ROLE_VIEW', 'ROLE_ADMIN', 'ROLE_SUPER_ADMIN'));
+        }
+        const navTs = document.getElementById('navTokenSessionsItem');
+        if (navTs) {
+          navTs.classList.toggle('d-none', !hasAnyAuthority('ROLE_VIEW', 'ROLE_ADMIN', 'ROLE_SUPER_ADMIN'));
+        }
+        authPermissionsResolved = true;
+        renderUsers(usersCache);
       }
 
       function renderUsers(list) {
@@ -407,7 +504,7 @@
                     return `
                       <span class="role-chip ${catClass}" title="${escapeHtml(roleName(role))}">
                         <span>${escapeHtml(roleName(role))}</span>
-                        ${canDeleteUser ? `
+                        ${authPermissionsResolved && canRemoveRole ? `
                           <button type="button" title="Gỡ role" onclick="removeRole('${u.id}', '${role.id}', '${escapeHtml(roleName(role))}')">
                             <i class="bi bi-x-circle"></i>
                           </button>
@@ -419,31 +516,31 @@
               : '<span class="text-muted">Chưa có role</span>';
             return `
               <tr>
-                <td class="truncate" title="${u.id}">${u.id}</td>
+                <td class="truncate font-monospace text-body-secondary" title="${escapeHtml(String(u.id ?? ''))}">${formatShortId(u.id)}</td>
                   <td class="truncate" title="${u.username ?? ''}">${u.username ?? ''}</td>
                   <td class="truncate" title="${u.fullName ?? ''}">${u.fullName ?? ''}</td>
                   <td class="truncate" title="${u.email ?? ''}">${u.email ?? ''}</td>
                   <td class="truncate" title="${u.phone ?? ''}">${u.phone ?? ''}</td>
                   <td>${u.isActive ? 'Yes' : 'No'}</td>
-                  <td title="${escapeHtml(rolesText)}">${roleBadges}</td>
-                  <td class="text-end col-actions">
-                  ${canUpdateUser ? `
-                    <button class="btn btn-sm btn-outline-primary me-1" onclick="openUserEdit('${u.id}')">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                  ` : ''}
-                  ${canAssignRole ? `
-                    <button class="btn btn-sm btn-outline-secondary me-1" onclick="openAssignRole('${u.id}')">
-                      <i class="bi bi-shield"></i>
-                    </button>
-                  ` : ''}
-                  ${canDeleteUser ? `
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${u.id}')">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  ` : ''}
-                  ${(!canUpdateUser && !canAssignRole && !canDeleteUser) ? '<span class="text-muted small">Chỉ xem</span>' : ''}
-                </td>
+                  <td class="col-roles" title="${escapeHtml(rolesText)}">${roleBadges}</td>
+                  <td class="text-end col-actions">${
+                    !authPermissionsResolved
+                      ? '<span class="text-muted" style="font-size:0.875rem"></span>'
+                      : [
+                          canUpdateUser
+                            ? `<button type="button" class="btn btn-outline-primary btn-action-compact me-1" title="Sửa" onclick="openUserEdit('${u.id}')"><i class="bi bi-pencil"></i></button>`
+                            : '',
+                          canAssignRole
+                            ? `<button type="button" class="btn btn-outline-secondary btn-action-compact me-1" title="Gán role" onclick="openAssignRole('${u.id}')"><i class="bi bi-shield"></i></button>`
+                            : '',
+                          canDeleteUser
+                            ? `<button type="button" class="btn btn-outline-danger btn-action-compact" title="Xóa" onclick="deleteUser('${u.id}')"><i class="bi bi-trash"></i></button>`
+                            : '',
+                          !canUpdateUser && !canAssignRole && !canDeleteUser
+                            ? '<span class="text-muted" style="font-size:0.875rem">Chỉ xem</span>'
+                            : '',
+                        ].join('')
+                  }</td>
               </tr>
             `;
           })
@@ -520,25 +617,30 @@
         loadUsers();
       }
 
+      function roleMatchesFilterSearch(r, qRaw) {
+        const q = (qRaw || '').trim().toLowerCase();
+        if (!q) return true;
+        const name = (roleName(r) || '').toLowerCase();
+        const code = (getRoleCode(r) || '').toLowerCase();
+        return name.includes(q) || code.includes(q);
+      }
+
       async function loadRoles() {
         const res = await fetch(API_ROLES);
         if (!res.ok) throw new Error(await readErrorMessage(res, `Load roles failed (${res.status})`));
         rolesCache = await res.json();
         renderRoleFilters();
-        const roleAssignSelect = document.getElementById('roleAssignSelect');
-        roleAssignSelect.innerHTML = '';
-        rolesCache.forEach((r) => {
-          const opt = document.createElement('option');
-          opt.value = r.id;
-          opt.textContent = roleName(r);
-          roleAssignSelect.appendChild(opt);
-        });
+        renderRoleAssignSelect();
       }
 
       function renderRoleFilters() {
         const roleFilterSelect = document.getElementById('roleFilterSelect');
         if (!roleFilterSelect) return;
-        const sortedRoles = [...rolesCache].sort((a, b) => roleName(a).localeCompare(roleName(b), 'vi'));
+        const searchEl = document.getElementById('roleSearchInput');
+        const q = searchEl ? searchEl.value : '';
+        const sortedRoles = [...rolesCache]
+          .filter((r) => roleMatchesFilterSearch(r, q))
+          .sort((a, b) => roleName(a).localeCompare(roleName(b), 'vi'));
         roleFilterSelect.innerHTML = '';
         const allOption = document.createElement('option');
         allOption.value = 'ALL';
@@ -554,6 +656,27 @@
           selectedRoleFilter = 'ALL';
         }
         roleFilterSelect.value = selectedRoleFilter;
+      }
+
+      function renderRoleAssignSelect() {
+        const roleAssignSelect = document.getElementById('roleAssignSelect');
+        if (!roleAssignSelect) return;
+        const searchEl = document.getElementById('roleAssignSearchInput');
+        const q = searchEl ? searchEl.value : '';
+        const prev = roleAssignSelect.value;
+        const filtered = [...rolesCache]
+          .filter((r) => roleMatchesFilterSearch(r, q))
+          .sort((a, b) => roleName(a).localeCompare(roleName(b), 'vi'));
+        roleAssignSelect.innerHTML = '';
+        filtered.forEach((r) => {
+          const opt = document.createElement('option');
+          opt.value = r.id;
+          opt.textContent = roleName(r);
+          roleAssignSelect.appendChild(opt);
+        });
+        if (prev && filtered.some((r) => r.id === prev)) {
+          roleAssignSelect.value = prev;
+        }
       }
 
       function openUserCreate() {
@@ -661,7 +784,7 @@
       }
 
       async function removeRole(userId, roleId, roleLabel) {
-        if (!canDeleteUser) return;
+        if (!canRemoveRole) return;
         if (!confirm('Bạn có chắc chắn xoá không?')) return;
         clearError();
         try {
@@ -674,8 +797,38 @@
       }
 
       document.addEventListener('DOMContentLoaded', function () {
-        (async function initAuthGreeting() {
+        const sidebarWrapper = document.querySelector('.sidebar-wrapper');
+        if (sidebarWrapper && OverlayScrollbarsGlobal?.OverlayScrollbars !== undefined) {
+          OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
+            scrollbars: {
+              theme: 'os-theme-light',
+              autoHide: 'leave',
+              clickScroll: true,
+            },
+          });
+        }
+        const roleFilterSelect = document.getElementById('roleFilterSelect');
+        if (roleFilterSelect) {
+          roleFilterSelect.addEventListener('change', (event) => {
+            setRoleCategoryFilter(event.target.value || 'ALL');
+          });
+        }
+        const roleSearchInput = document.getElementById('roleSearchInput');
+        if (roleSearchInput) {
+          roleSearchInput.addEventListener('input', () => {
+            renderRoleFilters();
+          });
+        }
+        const roleAssignSearchInput = document.getElementById('roleAssignSearchInput');
+        if (roleAssignSearchInput) {
+          roleAssignSearchInput.addEventListener('input', () => {
+            renderRoleAssignSelect();
+          });
+        }
+
+        (async function boot() {
           try {
+            authPermissionsResolved = false;
             const res = await fetch('/api/auth/me');
             if (!res.ok) {
               window.location.assign('/auth');
@@ -705,7 +858,15 @@
             }
           } catch (_) {
             window.location.assign('/auth');
+            return;
           }
+
+          try {
+            await Promise.all([loadUsers(), loadRoles()]);
+          } catch (_) {
+            /* loadUsers/loadRoles đã showError */
+          }
+          setRoleCategoryFilter('ALL');
         })();
 
         const authLink = document.getElementById('authLink');
@@ -725,26 +886,6 @@
             window.location.assign('/auth');
           });
         }
-        const sidebarWrapper = document.querySelector('.sidebar-wrapper');
-        if (sidebarWrapper && OverlayScrollbarsGlobal?.OverlayScrollbars !== undefined) {
-          OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
-            scrollbars: {
-              theme: 'os-theme-light',
-              autoHide: 'leave',
-              clickScroll: true,
-            },
-          });
-        }
-        const roleFilterSelect = document.getElementById('roleFilterSelect');
-        if (roleFilterSelect) {
-          roleFilterSelect.addEventListener('change', (event) => {
-            setRoleCategoryFilter(event.target.value || 'ALL');
-          });
-        }
-        Promise.all([loadUsers(), loadRoles()]).catch(() => {});
-
-        // Default category UI
-        setRoleCategoryFilter('ALL');
       });
     </script>
   </body>
